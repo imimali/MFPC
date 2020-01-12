@@ -18,11 +18,12 @@ class DbConnectionHelper:
 
 
 class DbOperation:
-    def __init__(self, connection_params: DbConnectionHelper, table_name, params):
+    def __init__(self, connection_params: DbConnectionHelper, table_name, key, params=None):
         self.table_name = table_name
         self.connection_params = connection_params
         self.params = params
         self.is_select = False
+        self.key = key
 
     def _build_sql(self):
         raise NotImplementedError
@@ -40,56 +41,73 @@ class DbOperation:
 
 
 class InsertOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, **params):
-        super().__init__(connection_params, table_name, params)
+    def __init__(self, connection_params: DbConnectionHelper, table_name, key=None, params=None):
+        super().__init__(connection_params, table_name, key, params)
+        assert params is not None
 
     def _build_sql(self):
-        column_names = '(' + ', '.join(self.params.keys()) + ')'
-        column_vals = '(' + '%s,' * (len(self.params) - 1) + '%s)'
+        column_names = '(' + ', '.join(['id'] + list(self.params.keys())) + ')'
+        column_vals = '(' + '%s,' * (len(self.params)) + '%s)'
         sql = f"INSERT INTO {self.table_name} {column_names} VALUES {column_vals}"
-        return sql, tuple(self.params.values())
+        return sql, tuple(([self.key] + list(self.params.values())))
 
 
 class UpdateOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, **params):
-        super().__init__(connection_params, table_name, params)
+    def __init__(self, connection_params: DbConnectionHelper, table_name, key, params):
+        super().__init__(connection_params, table_name, key, params)
 
     def _build_sql(self):
-        assert len(self.params) > 1
+        assert len(self.params) >= 1
         params = tuple(self.params.keys())
-        column_names = ', '.join(map(lambda x: x + ' = %s', params[:-1]))
-        where_params = params[-1] + ' = %s'
+        column_names = ', '.join(map(lambda x: x + ' = %s', params))
+        where_params = 'id = %s'
         sql = f'UPDATE {self.table_name} SET {column_names} WHERE {where_params}'
-        return sql, tuple(self.params.values())
+        return sql, tuple(list(self.params.values()) + [self.key])
 
 
 class SelectOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, **params):
+    def __init__(self, connection_params: DbConnectionHelper, table_name, key=None, params=None):
         super().__init__(connection_params, table_name, params)
         self.is_select = True
+        self.key = key
 
     def _build_sql(self):
-        column_names = 'AND '.join(map(lambda x: x + ' = %s ', tuple(self.params.keys())))
+        column_names = 'AND '.join(map(lambda x: x + ' = %s ', tuple(self.params.keys()))) if self.params else None
         sql = f'SELECT * FROM {self.table_name}'
-        if column_names:
-            sql += f' WHERE {column_names}'
-        return sql, tuple(self.params.values())
+        if self.key:
+            sql += f' WHERE id = %s '
+            if column_names:
+                sql += column_names
+        args = (self.key,) if not self.params else tuple([self.key] + list(self.params.values()))
+        return sql, args
 
 
 class DeleteOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, **params):
-        super().__init__(connection_params, table_name, params)
+    def __init__(self, connection_params: DbConnectionHelper, table_name, key, params=None):
+        super().__init__(connection_params, table_name, key, params)
 
     def _build_sql(self):
-        assert len(self.params) > 0
-        column_names = 'AND '.join(map(lambda x: x + ' = %s ', tuple(self.params.keys())))
-        sql = f'DELETE FROM {self.table_name} WHERE {column_names}'
-        return sql, tuple(self.params.values())
+        sql = f'DELETE FROM {self.table_name}'
+        if self.key:
+            sql += f" WHERE id = %s"
+        return sql, (self.key,)
 
 
-i = InsertOperation(DbConnectionHelper('MovieRental'), 'client', name='custom', email='custom@gmail.com', age=12,
-                    id=12)
-i.execute()
-j = DeleteOperation(DbConnectionHelper('MovieRental'), 'client', id=12)
+'''
+connection = DbConnectionHelper('MovieRental')
+print('     initial', SelectOperation(connection, 'client').execute())
 
-print(j.execute())
+update_operation = UpdateOperation(connection, 'client', key=12, params={'email': 'ahoy@mail'})
+update_operation.execute()
+print('after update', SelectOperation(connection, 'client').execute())
+
+insert_operation = InsertOperation(connection, 'client', key=12,
+                                   params={'name': 'once again', 'email': 'hot@mail', 'age': 22})
+print(insert_operation._build_sql())
+insert_operation.execute()
+print('after insert', SelectOperation(connection, 'client').execute())
+
+delete_operation = DeleteOperation(connection, 'client', key=12)
+delete_operation.execute()
+print('after delete', SelectOperation(connection, 'client').execute())
+'''
