@@ -38,3 +38,7 @@ class SynchronizedTable:
     def __setitem__(self, key, value):
         with self.lock:
             self.elems[key] = value
+
+    def __contains__(self, item):
+        with self.lock:
+            return item in self.elems
