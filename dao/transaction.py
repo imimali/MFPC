@@ -4,28 +4,49 @@
     @author: Gergely
 '''
 from tables.tables import SynchronizedTable, TransactionTableEntry, WaitForGraphEntry, LockTableEntry
-from dao.repo import DbOperation, DeleteOperation, DbConnectionHelper
-from itertools import product
+from dao.repo import DbOperation, DeleteOperation, DbConnectionHelper, SelectOperation, UpdateOperation, InsertOperation
+import json
+
 
 
 class Transaction:
     TRANSACTIONS = SynchronizedTable()
     LOCKS = SynchronizedTable()
     WAIT_FOR_GRAPH = SynchronizedTable()
+    ID = 0
 
-    def __init__(self, operations, id):
+    def __init__(self, operations):
         self.operations = operations
-        self.id = id
+        self.id = Transaction.ID
+        Transaction.ID += 1
+        self.nuke_operations = []
+        self.backup_log_file = f'backup_tr_{self.id}.json'
+        self._save_backup_data()
 
-        db_names = {operation.db_name for operation in operations}
-        table_names = {operation.table_name for operation in operations}
-        data_backup_keys = product(db_names, table_names)
-        delete_operations = [DeleteOperation(DbConnectionHelper(tup[0]), tup[1])
-                             for tup in data_backup_keys]
-        insert_operations = []
+    def _save_backup_data(self):
+        # save in a set every table name along with the db it belongs to
+        working_tables = {(operation.connection_params.db_name, operation.table_name) for operation in self.operations}
+
+        # prepare afferent select operations to save the data
+        backup_operations = [SelectOperation(DbConnectionHelper(db_name=pair[0]), table_name=pair[1])
+                             for pair in working_tables]
+
+        self.nuke_operations = [DeleteOperation(DbConnectionHelper(db_name=pair[0]), table_name=pair[1])
+                                for pair in working_tables]
+
+        backup_data = {operation.get_resource_id(): operation.execute() for operation in backup_operations}
+
+        with open(self.backup_log_file, 'w+') as f:
+            json.dump(backup_data, f)
 
     def rollback(self):
-        pass
+        # for op in self.nuke_operations:
+        #   op.execute()
+        with open(self.backup_log_file, 'r') as f:
+            data = json.load(f)
+            for entry in data:
+                db_name, table_name = entry.split('$')
+                InsertOperation(DbConnectionHelper(db_name), table_name).execute()
 
     def execute(self):
         for operation in self.operations:
@@ -36,3 +57,19 @@ class Transaction:
                                                                 locked_table=operation.table_name,
                                                                 locked_object=operation.key,
                                                                 trans_has_lock=self.LOCKS[op_key].transaction)
+
+
+connection = DbConnectionHelper('MovieRental')
+connection_aop = DbConnectionHelper('aop')
+
+update_op = UpdateOperation(connection, 'client', key=12, params={'email': 'ahoy@mail'})
+insert_op = InsertOperation(connection, 'client', key=12,
+                            params={'name': 'once again', 'email': 'hot@mail', 'age': 22}, is_explicit=False)
+delete_op = DeleteOperation(connection_aop, 'my_entity')
+select_op = SelectOperation(connection_aop, 'candidates')
+
+# transaction = Transaction([update_op, insert_op, delete_op, select_op])
+# print(transaction.rollback())
+# print(insert_op._build_sql())
+# print(delete_op.execute())
+

@@ -28,6 +28,10 @@ class DbOperation:
     def _build_sql(self):
         raise NotImplementedError
 
+    def get_resource_id(self):
+        return f"""{self.connection_params.db_name}${self.table_name}{'$' + str(
+            self.key) if self.key is not None else ''}"""
+
     def execute(self):
         connection = psycopg2.connect(self.connection_params.to_psycopg2())
         cursor = connection.cursor()
@@ -41,14 +45,16 @@ class DbOperation:
 
 
 class InsertOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, key=None, params=None):
+    def __init__(self, connection_params: DbConnectionHelper, table_name, key=None, params=None,
+                 is_explicit=True):
         super().__init__(connection_params, table_name, key, params)
         assert params is not None
+        self.is_explicit = is_explicit
 
     def _build_sql(self):
         column_names = '(' + ', '.join(['id'] + list(self.params.keys())) + ')'
         column_vals = '(' + '%s,' * (len(self.params)) + '%s)'
-        sql = f"INSERT INTO {self.table_name} {column_names} VALUES {column_vals}"
+        sql = f"INSERT INTO {self.table_name} {column_names if self.is_explicit else ''} VALUES {column_vals}"
         return sql, tuple(([self.key] + list(self.params.values())))
 
 
@@ -83,7 +89,7 @@ class SelectOperation(DbOperation):
 
 
 class DeleteOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, key, params=None):
+    def __init__(self, connection_params: DbConnectionHelper, table_name, key=None, params=None):
         super().__init__(connection_params, table_name, key, params)
 
     def _build_sql(self):
@@ -110,4 +116,6 @@ print('after insert', SelectOperation(connection, 'client').execute())
 delete_operation = DeleteOperation(connection, 'client', key=12)
 delete_operation.execute()
 print('after delete', SelectOperation(connection, 'client').execute())
+connection = DbConnectionHelper('MovieRental')
+print(SelectOperation(connection, 'client').get_resource_id())
 '''
