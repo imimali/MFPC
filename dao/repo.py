@@ -4,6 +4,11 @@
     @author: Gergely
 '''
 import psycopg2
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class DbConnectionHelper:
@@ -36,7 +41,7 @@ class DbOperation:
         connection = psycopg2.connect(self.connection_params.to_psycopg2())
         cursor = connection.cursor()
         cursor_params = self._build_sql()
-
+        logger.info(f'Executing {cursor_params}')
         cursor.execute(*cursor_params)
         if self.is_select:
             return cursor.fetchall()
