@@ -42,3 +42,7 @@ class SynchronizedTable:
     def __contains__(self, item):
         with self.lock:
             return item in self.elems
+
+    def __delitem__(self, key):
+        with self.lock:
+            del self.elems[key]
