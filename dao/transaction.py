@@ -3,15 +3,14 @@
     
     @author: Gergely
 '''
-from tables.tables import SynchronizedTable, TransactionTableEntry, WaitForGraphEntry, LockTableEntry
-from dao.repo import DbOperation, DeleteOperation, DbConnectionHelper, SelectOperation, UpdateOperation, InsertOperation
 import json
-
 import logging
+import time
+
+from dao.repo import DeleteOperation, DbConnectionHelper, SelectOperation, InsertOperation
+from tables.tables import SynchronizedTable, TransactionTableEntry, WaitForGraphEntry, LockTableEntry, TransactionStatus
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class Transaction:
@@ -24,13 +23,22 @@ class Transaction:
         self.operations = operations
         self.id = Transaction.ID
         Transaction.ID += 1
+
+        self.logger = logging.getLogger(f'.transaction[{self.id}]')
+        self.logger.setLevel(logging.DEBUG)
+
         self.nuke_operations = []
-        self.backup_log_file = f'backup_trw_{self.id}.json'
+        self.backup_log_file = f'backup_tr_{self.id}.json'
         self._save_backup_data()
+
+        self.TRANSACTIONS.append(TransactionTableEntry(id=self.id,
+                                                       timestamp=time.time(),
+                                                       status=TransactionStatus.ACTIVE.value))
 
     def _save_backup_data(self):
         # save in a set every table name along with the db it belongs to
-        working_tables = {(operation.connection_params.db_name, operation.table_name) for operation in self.operations}
+        working_tables = {(operation.connection_params.db_name, operation.table_name) for operation in self.operations
+                          if not operation.is_select}
 
         # prepare afferent select operations to save the data
         backup_operations = [SelectOperation(DbConnectionHelper(db_name=pair[0]), table_name=pair[1])
@@ -40,6 +48,7 @@ class Transaction:
                                 for pair in working_tables]
 
         backup_data = {operation.get_resource_id(): operation.execute() for operation in backup_operations}
+        self.logger.info(f'Backup Data {backup_data}')
 
         with open(self.backup_log_file, 'w+') as f:
             json.dump(backup_data, f)
@@ -47,7 +56,7 @@ class Transaction:
     def rollback(self):
         for op in self.nuke_operations:
             op.execute()
-        logger.warning(f'Rolling back Transaction {self.id}')
+        self.logger.warning(f'Rolling Back {self.id}')
         with open(self.backup_log_file, 'r') as f:
             data = json.load(f)
             for entry in data:
@@ -60,30 +69,50 @@ class Transaction:
                                          key=row[0],
                                          is_explicit=False)
                     op.execute()
-                    print(op._build_sql())
+                    # print(op._build_sql())
 
     def execute(self):
+        # block all resources
         for operation in self.operations:
-            op_key = operation.key
+            op_key = operation.get_resource_id()
             lock_type = 'write' if not operation.is_select else 'read'
-            if op_key in self.LOCKS:
-                self.WAIT_FOR_GRAPH[op_key] = WaitForGraphEntry(lock_type=lock_type,
-                                                                locked_table=operation.table_name,
-                                                                locked_object=operation.key,
-                                                                trans_has_lock=self.LOCKS[op_key].transaction)
+            # TODO might have to synchronize atomically the get and the put in the map
+            if self.LOCKS.contains(locked_object=op_key):
+                trans_has_lock = self.LOCKS.get(record_id=op_key,
+                                                lock_type='write')[0].transaction
+                self.logger.warning(f'Waiting for transaction {trans_has_lock}')
+                self.WAIT_FOR_GRAPH.append(
+                    WaitForGraphEntry(lock_type=lock_type,
+                                      locked_table=operation.table_name,
+                                      locked_object=operation.key,
+                                      trans_waits_lock=self.id,
+                                      trans_has_lock=trans_has_lock))
+            else:
+                self.LOCKS.append(LockTableEntry(id=0,
+                                                 type=lock_type,
+                                                 record_id=op_key,
+                                                 transaction=self.id))
+
+        for operation in self.operations:
+            operation.execute()
+        # TODO unlock in reverse order
+        self.LOCKS.delete(transaction=self.id)
 
 
+'''
 connection = DbConnectionHelper('MovieRental')
 connection_aop = DbConnectionHelper('aop')
 
 update_op = UpdateOperation(connection, 'client', key=12, params={'email': 'ahoy@mail'})
 insert_op = InsertOperation(connection, 'client', key=12,
-                            params={'name': 'once again', 'email': 'hot@mail', 'age': 22}, is_explicit=False)
+            params={'name': 'once again', 'email': 'hot@mail', 'age': 22},
+            is_explicit=False)
 delete_op = DeleteOperation(connection_aop, 'my_entity')
 select_op = SelectOperation(connection_aop, 'candidates')
 
 transaction = Transaction([update_op, insert_op, delete_op, select_op])
-#transaction.rollback()
+# transaction.rollback()
 # print(transaction.rollback())
 # print(insert_op._build_sql())
 # print(delete_op.execute())
+'''
