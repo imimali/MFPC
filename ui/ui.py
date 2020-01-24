@@ -48,16 +48,16 @@ class App(QWidget):
         edits_layout = QHBoxLayout()
         edits_layout.setSpacing(24)
         client_form = MFormWidget(title='Client', row_names=['id', 'name', 'age', 'email'])
-        rental_form = MFormWidget(title='Rental', row_names=['id', 'person_id', 'movie_id'])
-        movie_form = MFormWidget(title='Movie', row_names=['id', 'title', 'genre' 'rating'])
+        rental_form = MFormWidget(title='Rental', row_names=['id', 'client_id', 'movie_id'])
+        movie_form = MFormWidget(title='Movie', row_names=['id', 'title', 'genre', 'rating'])
         for widget in [client_form, rental_form, movie_form]:
             edits_layout.addWidget(widget)
 
         tables_layout = QHBoxLayout()
         tables_layout.setSpacing(16)
         client_table = MTableWidget(['id', 'name', 'age', 'email'], title='Client')
-        rental_table = MTableWidget(['id', 'person_id', 'movie_id'], title='Rental')
-        movie_table = MTableWidget(['id', 'year', 'title', 'rating'], title='Movie')
+        rental_table = MTableWidget(['id', 'client_id', 'movie_id'], title='Rental')
+        movie_table = MTableWidget(['id', 'title', 'genre', 'rating'], title='Movie')
         for widget in [client_table, rental_table, movie_table]:
             tables_layout.addWidget(widget)
 
@@ -76,15 +76,19 @@ class App(QWidget):
         self.movie_form = movie_form
 
         self.transaction_handle = transaction_utils
-        self.fill_table()
+        self.connect_ui()
         self.show()
 
     def connect_ui(self):
-        pass
+        self.client_table: MTableWidget
+        self.client_table.table.itemSelectionChanged.connect(
+            lambda: self.client_form.fill_edits(self.client_table.get_selected_row_data()))
 
-    def fill_table(self):
-        pass
-        # self.person_table.fill([list({'id': 2, 'name': 'once again', 'email': 'hot@mail', 'age': 22}.values())])
+        self.movie_table.table.itemSelectionChanged.connect(
+            lambda: self.movie_form.fill_edits(self.movie_table.get_selected_row_data()))
+
+        self.rental_table.table.itemSelectionChanged.connect(
+            lambda: self.rental_form.fill_edits(self.rental_table.get_selected_row_data()))
 
 
 if __name__ == '__main__':

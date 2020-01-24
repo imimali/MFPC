@@ -42,13 +42,19 @@ class MFormWidget(QWidget):
         edit_layout = QFormLayout()
         edit_layout.setSpacing(4)
         edit_layout.addWidget(QLabel(title))
+        self.line_edits = {}
         for row in row_names:
             value_edit = QLineEdit()
             value_edit.setFixedHeight(40)
             value_edit.setFixedWidth(120)
             edit_layout.addRow(row, value_edit)
+            self.line_edits[row] = value_edit
         edit_layout.addRow(AUDButtonBar())
         self.setLayout(edit_layout)
+
+    def fill_edits(self, data):
+        for name_edit in self.line_edits:
+            self.line_edits[name_edit].setText(data[name_edit])
 
 
 class AUDButtonBar(QWidget):
@@ -81,6 +87,7 @@ class MTableWidget(QWidget):
         table.resizeColumnsToContents()
         table.resizeRowsToContents()
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        table.setSelectionMode(QAbstractItemView.SingleSelection)
 
         wrapper = QVBoxLayout()
 
@@ -91,8 +98,15 @@ class MTableWidget(QWidget):
         wrapper.addWidget(fill_button)
 
         self.table = table
+        self.columns_names = columns_names
         self.fill_button = fill_button
         self.setLayout(wrapper)
+
+    def get_selected_row_data(self):
+        i = self.table.selectedIndexes()[0].row()
+        return {self.columns_names[j]: (self.table.item(i, j).text()
+                                        if self.table.item(i, j) else None)
+                for j in range(len(self.columns_names))}
 
     def connect_fill_button(self, connect_callback):
         self.fill_button.clicked.connect(connect_callback)
