@@ -7,7 +7,7 @@ import json
 import logging
 import time
 
-from dao.repo import DeleteOperation, DbConnectionHelper, SelectOperation, InsertOperation
+from dao.db import DeleteOperation, DbConnectionHelper, SelectOperation, InsertOperation
 from tables.tables import SynchronizedTable, TransactionTableEntry, WaitForGraphEntry, LockTableEntry, TransactionStatus
 
 logging.basicConfig(level=logging.DEBUG)

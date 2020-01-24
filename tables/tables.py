@@ -39,33 +39,27 @@ class SynchronizedTable:
         self.elems = []
         self.lock = Lock()
 
+    @staticmethod
+    def _check(op, params):
+        return all([hasattr(op, arg) and getattr(op, arg, False) == params[arg] for arg in params])
+
     def append(self, elem):
         with self.lock:
             self.elems.append(elem)
 
     def get(self, **kwargs):
-        def check(op):
-            return all([hasattr(op, arg) and getattr(op, arg, False) == kwargs[arg] for arg in kwargs])
-
-        return list(filter(check, self.elems))
+        with self.lock:
+            return list(filter(lambda x: self._check(x, kwargs), self.elems))
 
     def contains(self, **kwargs):
         assert len(kwargs) > 0
-
-        def check(op):
-            return all([hasattr(op, arg) and getattr(op, arg, False) == kwargs[arg] for arg in kwargs])
-
         with self.lock:
-            return len(list(filter(check, self.elems))) > 0
+            return len(list(filter(lambda x: self._check(x, kwargs), self.elems))) > 0
 
     def delete(self, **kwargs):
         assert len(kwargs) > 0
-
-        def check(op):
-            return not all([hasattr(op, arg) and getattr(op, arg, False) == kwargs[arg] for arg in kwargs])
-
         with self.lock:
-            self.elems = list(filter(check, self.elems))
+            self.elems = list(filter(lambda x: not self._check(x, kwargs), self.elems))
 
 
 '''
