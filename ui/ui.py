@@ -25,6 +25,16 @@ class App(QWidget):
         self.top = 200
         self.width = 800
         self.height = 800
+        self.person_table = None
+        self.rental_table = None
+        self.movie_table = None
+
+        self.person_form = None
+        self.rental_form = None
+        self.movie_form = None
+
+        self.transaction_handle = None
+
         self.init_ui()
 
     def init_ui(self):
@@ -52,9 +62,21 @@ class App(QWidget):
             tables_layout.addWidget(widget)
 
         main_layout.addLayout(tables_layout)
-        main_layout.addWidget(TransactionUtilsWidget())
+        transaction_utils = TransactionUtilsWidget()
+        main_layout.addWidget(transaction_utils)
         main_layout.addLayout(edits_layout)
         self.setLayout(main_layout)
+
+        self.person_table = person_table
+        self.rental_table = rental_table
+        self.movie_table = movie_table
+
+        self.person_form = person_form
+        self.rental_form = rental_form
+        self.movie_form = movie_form
+
+        self.transaction_handle = transaction_utils
+
         self.show()
 
 
