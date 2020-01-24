@@ -5,6 +5,7 @@
 '''
 import sys
 
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot, QRect
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import *
@@ -21,16 +22,7 @@ class App(QWidget):
         self.left = 200
         self.top = 200
         self.width = 800
-        self.height = 500
-        self.run_transaction_button = None
-        self._plainTextEdit = None
-        self._cipherTextEdit = None
-        self._encryptButton = None
-        self._decryptButton = None
-        self._encryptionKeyInfoLabel = None
-        self._decryptionKeyInfoLabel = None
-        self._key = None
-        # self.initUI()
+        self.height = 800
         self.init_ui()
 
     def init_ui(self):
@@ -39,10 +31,19 @@ class App(QWidget):
         self.setFont(font)
         main_layout = QVBoxLayout()
 
-        # run transaction button
-        run_transaction_layout = QHBoxLayout()
+        # transaction
+        run_transaction_layout = QVBoxLayout()
         run_transaction_layout.setContentsMargins(200, 0, 200, 0)
+        transaction_list = QListWidget()
+        run_transaction_layout.addWidget(transaction_list)
+
+        manage_buttons_layout = QHBoxLayout()
+        enough_button = QPushButton('Enough')
+        start_new_transaction_button = QPushButton('New Transaction')
+        manage_buttons_layout.addWidget(start_new_transaction_button)
+        manage_buttons_layout.addWidget(enough_button)
         run_transaction_button = QPushButton('Run Transaction')
+        run_transaction_layout.addLayout(manage_buttons_layout)
         run_transaction_layout.addWidget(run_transaction_button)
         run_transaction_button.setFont(font)
 
@@ -51,6 +52,14 @@ class App(QWidget):
         edits_layout.addLayout(self.build_form(title='Person', row_names=['id', 'name', 'age', 'email']))
         edits_layout.addLayout(self.build_form(title='Rental', row_names=['id', 'person_id', 'movie_id']))
         edits_layout.addLayout(self.build_form(title='Rental', row_names=['id', 'year', 'title', 'rating']))
+
+        tables_layout = QHBoxLayout()
+        tables_layout.setSpacing(16)
+        tables_layout.addLayout(App.build_table(['id', 'name', 'age', 'email'], title='Person'))
+        tables_layout.addLayout(App.build_table(['id', 'person_id', 'movie_id'], title='Rental'))
+        tables_layout.addLayout(App.build_table(['id', 'year', 'title', 'rating'], title='Movie'))
+
+        main_layout.addLayout(tables_layout)
         main_layout.addLayout(run_transaction_layout)
         main_layout.addLayout(edits_layout)
         self.setLayout(main_layout)
@@ -83,6 +92,31 @@ class App(QWidget):
         value_edit.setFixedHeight(40)
         value_edit.setFixedWidth(120)
         return value_edit
+
+    @staticmethod
+    def build_table(columns_names, rows=0, title=''):
+        table = QTableWidget()
+        table.setContentsMargins(10, 10, 10, 10)
+        table.setColumnCount(len(columns_names))
+        table.setRowCount(3)
+        table.setHorizontalHeaderLabels(columns_names)
+        table.resizeColumnsToContents()
+        table.resizeRowsToContents()
+        table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        for i in range(rows):
+            for j in range(len(columns_names)):
+                # item = QTableWidgetItem('asd')
+                table.setItem(i, j, QTableWidgetItem(f'iiiiiiiiiiiiiiiii={i};j={j}'))
+
+        wrapper = QVBoxLayout()
+
+        wrapper.addWidget(QLabel(title))
+        wrapper.addWidget(table)
+        fill_button = QPushButton('Fill')
+        fill_button.setFixedWidth(100)
+        wrapper.addWidget(fill_button)
+
+        return wrapper
 
 
 if __name__ == '__main__':
