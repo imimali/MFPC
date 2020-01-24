@@ -5,7 +5,7 @@
 '''
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QTableWidget, QAbstractItemView, QVBoxLayout, QLabel, \
-    QFormLayout, QLineEdit, QListWidget
+    QFormLayout, QLineEdit, QListWidget, QTableWidgetItem
 
 
 class TransactionUtilsWidget(QWidget):
@@ -97,5 +97,10 @@ class MTableWidget(QWidget):
     def connect_fill_button(self, connect_callback):
         self.fill_button.clicked.connect(connect_callback)
 
-    def fill_table(self):
-        pass
+    def fill(self, data):
+        if len(data) == 0:
+            return
+        self.table.setRowCount(len(data))
+        for i in range(len(data)):
+            for j in range(len(data[0])):
+                self.table.setItem(i, j, QTableWidgetItem(str(data[i][j])))

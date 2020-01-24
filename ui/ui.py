@@ -25,11 +25,11 @@ class App(QWidget):
         self.top = 200
         self.width = 800
         self.height = 800
-        self.person_table = None
+        self.client_table = None
         self.rental_table = None
         self.movie_table = None
 
-        self.person_form = None
+        self.client_form = None
         self.rental_form = None
         self.movie_form = None
 
@@ -47,18 +47,18 @@ class App(QWidget):
 
         edits_layout = QHBoxLayout()
         edits_layout.setSpacing(24)
-        person_form = MFormWidget(title='Person', row_names=['id', 'name', 'age', 'email'])
+        client_form = MFormWidget(title='Client', row_names=['id', 'name', 'age', 'email'])
         rental_form = MFormWidget(title='Rental', row_names=['id', 'person_id', 'movie_id'])
-        movie_form = MFormWidget(title='Rental', row_names=['id', 'year', 'title', 'rating'])
-        for widget in [person_form, rental_form, movie_form]:
+        movie_form = MFormWidget(title='Movie', row_names=['id', 'title', 'genre' 'rating'])
+        for widget in [client_form, rental_form, movie_form]:
             edits_layout.addWidget(widget)
 
         tables_layout = QHBoxLayout()
         tables_layout.setSpacing(16)
-        person_table = MTableWidget(['id', 'name', 'age', 'email'], title='Person')
+        client_table = MTableWidget(['id', 'name', 'age', 'email'], title='Client')
         rental_table = MTableWidget(['id', 'person_id', 'movie_id'], title='Rental')
         movie_table = MTableWidget(['id', 'year', 'title', 'rating'], title='Movie')
-        for widget in [person_table, rental_table, movie_table]:
+        for widget in [client_table, rental_table, movie_table]:
             tables_layout.addWidget(widget)
 
         main_layout.addLayout(tables_layout)
@@ -67,17 +67,24 @@ class App(QWidget):
         main_layout.addLayout(edits_layout)
         self.setLayout(main_layout)
 
-        self.person_table = person_table
+        self.client_table = client_table
         self.rental_table = rental_table
         self.movie_table = movie_table
 
-        self.person_form = person_form
+        self.client_form = client_form
         self.rental_form = rental_form
         self.movie_form = movie_form
 
         self.transaction_handle = transaction_utils
-
+        self.fill_table()
         self.show()
+
+    def connect_ui(self):
+        pass
+
+    def fill_table(self):
+        pass
+        # self.person_table.fill([list({'id': 2, 'name': 'once again', 'email': 'hot@mail', 'age': 22}.values())])
 
 
 if __name__ == '__main__':
