@@ -51,6 +51,10 @@ class SynchronizedTable:
         with self.lock:
             return list(filter(lambda x: self._check(x, kwargs), self.elems))
 
+    def update(self, old_elem, new_elem):
+        with self.lock:
+            self.elems = list(map(lambda x: new_elem if self._check(x, dict(old_elem._asdict())) else x, self.elems))
+
     def contains(self, **kwargs):
         assert len(kwargs) > 0
         with self.lock:
@@ -60,6 +64,9 @@ class SynchronizedTable:
         assert len(kwargs) > 0
         with self.lock:
             self.elems = list(filter(lambda x: not self._check(x, kwargs), self.elems))
+
+    def __str__(self):
+        return str([str(x) for x in self.elems])
 
 
 '''
