@@ -9,20 +9,20 @@ import time
 
 from dao.db import DeleteOperation, DbConnectionHelper, SelectOperation, InsertOperation
 from tables.tables import SynchronizedTable, TransactionTableEntry, WaitForGraphEntry, LockTableEntry, TransactionStatus
+from threading import Condition
 
 logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-9s) %(message)s')
 
 
 class Transaction:
     TRANSACTIONS = SynchronizedTable()
-    LOCKS = SynchronizedTable()
+    LOCKS = SynchronizedTable(Condition())
     WAIT_FOR_GRAPH = SynchronizedTable()
     ID = 0
 
-    def __init__(self, operations, condition):
+    def __init__(self, operations):
         self.operations = operations
         self.id = Transaction.ID
-        self.condition = condition
         Transaction.ID += 1
 
         self.logger = logging.getLogger(f'.transaction[{self.id}]')
@@ -90,7 +90,7 @@ class Transaction:
                                       trans_has_lock=trans_has_lock))
             # TODO this is okay
             while self.LOCKS.contains(locked_object=op_key):
-                self.condition.wait()
+                self.LOCKS.condition.wait()
 
             self.LOCKS.append(LockTableEntry(id=0,
                                              type=lock_type,
@@ -126,3 +126,4 @@ transaction = Transaction([update_op, insert_op, delete_op, select_op])
 # print(insert_op._build_sql())
 # print(delete_op.execute())
 '''
+t = Transaction([])

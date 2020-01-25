@@ -35,9 +35,10 @@ WaitForGraphEntry = namedtuple('WaitForGraphEntry',
 
 
 class SynchronizedTable:
-    def __init__(self):
+    def __init__(self, condition=None):
         self.elems = []
         self.lock = Lock()
+        self.condition = condition
 
     @staticmethod
     def _check(op, params):
@@ -64,6 +65,8 @@ class SynchronizedTable:
         assert len(kwargs) > 0
         with self.lock:
             self.elems = list(filter(lambda x: not self._check(x, kwargs), self.elems))
+        if self.condition is not None:
+            self.condition.notifyAll()
 
     def __str__(self):
         return str([str(x) for x in self.elems])
