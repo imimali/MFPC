@@ -87,11 +87,14 @@ class Transaction:
                                       locked_object=operation.key,
                                       trans_waits_lock=self.id,
                                       trans_has_lock=trans_has_lock))
-            else:
-                self.LOCKS.append(LockTableEntry(id=0,
-                                                 type=lock_type,
-                                                 record_id=op_key,
-                                                 transaction=self.id))
+            # TODO this is not okay
+            while self.LOCKS.contains(locked_object=op_key):
+                time.sleep(1)
+
+            self.LOCKS.append(LockTableEntry(id=0,
+                                             type=lock_type,
+                                             record_id=op_key,
+                                             transaction=self.id))
 
         for operation in self.operations:
             operation.execute()
