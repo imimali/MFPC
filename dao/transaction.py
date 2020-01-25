@@ -30,10 +30,10 @@ class Transaction:
         self.nuke_operations = []
         self.backup_log_file = f'backup_tr_{self.id}.json'
         self._save_backup_data()
-
-        self.TRANSACTIONS.append(TransactionTableEntry(id=self.id,
-                                                       timestamp=time.time(),
-                                                       status=TransactionStatus.ACTIVE.value))
+        self.transaction_table_entry = TransactionTableEntry(id=self.id,
+                                                             timestamp=time.time(),
+                                                             status=TransactionStatus.ACTIVE.value)
+        self.TRANSACTIONS.append(self.transaction_table_entry)
 
     def _save_backup_data(self):
         # save in a set every table name along with the db it belongs to
@@ -97,6 +97,12 @@ class Transaction:
             operation.execute()
         # TODO unlock in reverse order
         self.LOCKS.delete(transaction=self.id)
+
+        # commit
+        commit_entry = self.transaction_table_entry
+        commit_entry.status = TransactionStatus.COMMITTED
+        self.TRANSACTIONS.update(old_elem=self.transaction_table_entry,
+                                 new_elem=commit_entry)
 
 
 '''
