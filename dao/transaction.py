@@ -107,6 +107,7 @@ class Transaction:
         commit_entry.status = TransactionStatus.COMMITTED
         self.TRANSACTIONS.update(old_elem=self.transaction_table_entry,
                                  new_elem=commit_entry)
+        logging.info(f'Transaction {self.id} committed')
 
 
 '''
@@ -126,4 +127,3 @@ transaction = Transaction([update_op, insert_op, delete_op, select_op])
 # print(insert_op._build_sql())
 # print(delete_op.execute())
 '''
-t = Transaction([])

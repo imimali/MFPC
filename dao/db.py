@@ -23,12 +23,12 @@ class DbConnectionHelper:
 
 
 class DbOperation:
-    def __init__(self, connection_params: DbConnectionHelper, table_name, key, params=None):
+    def __init__(self, connection_params: DbConnectionHelper, table_name, params=None):
         self.table_name = table_name
         self.connection_params = connection_params
-        self.params = params
+        self.params = params if params is not None else {}
         self.is_select = False
-        self.key = key
+        self.key = self.params['id'] if 'id' in self.params else None
 
     def _build_sql(self):
         raise NotImplementedError
@@ -50,25 +50,26 @@ class DbOperation:
 
 
 class InsertOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, key=None, params=None,
+    def __init__(self, connection_params: DbConnectionHelper, table_name, params=None,
                  is_explicit=True):
-        super().__init__(connection_params, table_name, key, params)
+        super().__init__(connection_params, table_name, params)
         assert params is not None
         self.is_explicit = is_explicit
 
     def _build_sql(self):
-        column_names = '(' + ', '.join(['id'] + list(self.params.keys())) + ')'
-        column_vals = '(' + '%s,' * (len(self.params)) + '%s)'
+        column_names = '(' + ', '.join(list(self.params.keys())) + ')'
+        column_vals = '(' + '%s,' * (len(self.params) - 1) + '%s)'
         sql = f"INSERT INTO {self.table_name} {column_names if self.is_explicit else ''} VALUES {column_vals}"
-        return sql, tuple(([self.key] + list(self.params.values())))
+        return sql, tuple(self.params.values())
 
 
 class UpdateOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, key, params):
-        super().__init__(connection_params, table_name, key, params)
+    def __init__(self, connection_params: DbConnectionHelper, table_name, params):
+        super().__init__(connection_params, table_name, params)
 
     def _build_sql(self):
         assert len(self.params) >= 1
+        del self.params['id']
         params = tuple(self.params.keys())
         column_names = ', '.join(map(lambda x: x + ' = %s', params))
         where_params = 'id = %s'
@@ -77,12 +78,13 @@ class UpdateOperation(DbOperation):
 
 
 class SelectOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, key=None, params=None):
+    def __init__(self, connection_params: DbConnectionHelper, table_name, params=None):
         super().__init__(connection_params, table_name, params)
         self.is_select = True
-        self.key = key
 
     def _build_sql(self):
+        if self.key:
+            del self.params['id']
         column_names = 'AND '.join(map(lambda x: x + ' = %s ', tuple(self.params.keys()))) if self.params else None
         sql = f'SELECT * FROM {self.table_name}'
         if self.key:
@@ -94,8 +96,8 @@ class SelectOperation(DbOperation):
 
 
 class DeleteOperation(DbOperation):
-    def __init__(self, connection_params: DbConnectionHelper, table_name, key=None, params=None):
-        super().__init__(connection_params, table_name, key, params)
+    def __init__(self, connection_params: DbConnectionHelper, table_name, params=None):
+        super().__init__(connection_params, table_name, params)
 
     def _build_sql(self):
         sql = f'DELETE FROM {self.table_name}'
@@ -108,17 +110,17 @@ class DeleteOperation(DbOperation):
 connection = DbConnectionHelper('MovieRental')
 print('     initial', SelectOperation(connection, 'client').execute())
 
-update_operation = UpdateOperation(connection, 'client', key=12, params={'email': 'ahoy@mail'})
+update_operation = UpdateOperation(connection, 'client', params={'id': 12, 'email': 'ahoy@mail'})
 update_operation.execute()
 print('after update', SelectOperation(connection, 'client').execute())
 
-insert_operation = InsertOperation(connection, 'client', key=12,
-                                   params={'name': 'once again', 'email': 'hot@mail', 'age': 22})
+insert_operation = InsertOperation(connection, 'client',
+                                   params={'id': 12, 'name': 'once again', 'email': 'hot@mail', 'age': 22})
 print(insert_operation._build_sql())
 insert_operation.execute()
 print('after insert', SelectOperation(connection, 'client').execute())
 
-delete_operation = DeleteOperation(connection, 'client', key=12)
+delete_operation = DeleteOperation(connection, 'client', params={'id': 12})
 delete_operation.execute()
 print('after delete', SelectOperation(connection, 'client').execute())
 connection = DbConnectionHelper('MovieRental')
