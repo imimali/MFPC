@@ -46,20 +46,22 @@ class App(QWidget):
         main_layout = QVBoxLayout()
 
         # transaction
-
+        client_table_metadata = {'title': 'client', 'field_names': ['id', 'name', 'age', 'email']}
+        rental_table_metadata = {'title': 'rental', 'field_names': ['id', 'client_id', 'movie_id']}
+        movie_table_metadata = {'title': 'movie', 'field_names': ['id', 'title', 'genre', 'rating']}
         edits_layout = QHBoxLayout()
         edits_layout.setSpacing(24)
-        client_form = MFormWidget(title='client', row_names=['id', 'name', 'age', 'email'])
-        rental_form = MFormWidget(title='rental', row_names=['id', 'client_id', 'movie_id'])
-        movie_form = MFormWidget(title='movie', row_names=['id', 'title', 'genre', 'rating'])
+        client_form = MFormWidget(**client_table_metadata)
+        rental_form = MFormWidget(**rental_table_metadata)
+        movie_form = MFormWidget(**movie_table_metadata)
         for widget in [client_form, rental_form, movie_form]:
             edits_layout.addWidget(widget)
 
         tables_layout = QHBoxLayout()
         tables_layout.setSpacing(16)
-        client_table = MTableWidget(['id', 'name', 'age', 'email'], title='client')
-        rental_table = MTableWidget(['id', 'client_id', 'movie_id'], title='rental')
-        movie_table = MTableWidget(['id', 'title', 'genre', 'rating'], title='movie')
+        client_table = MTableWidget(**client_table_metadata)
+        rental_table = MTableWidget(**rental_table_metadata)
+        movie_table = MTableWidget(**movie_table_metadata)
         for widget in [client_table, rental_table, movie_table]:
             tables_layout.addWidget(widget)
 

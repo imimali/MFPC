@@ -37,13 +37,13 @@ class TransactionUtilsWidget(QWidget):
 
 
 class MFormWidget(QWidget):
-    def __init__(self, title, row_names):
+    def __init__(self, title, field_names):
         super().__init__()
         edit_layout = QFormLayout()
         edit_layout.setSpacing(4)
         edit_layout.addWidget(QLabel(title))
         self.line_edits = {}
-        for row in row_names:
+        for row in field_names:
             value_edit = QLineEdit()
             value_edit.setFixedHeight(40)
             value_edit.setFixedWidth(120)
@@ -82,13 +82,13 @@ class AUDButtonBar(QWidget):
 
 
 class MTableWidget(QWidget):
-    def __init__(self, columns_names, title):
+    def __init__(self, field_names, title):
         super().__init__()
         table = QTableWidget()
         table.setContentsMargins(10, 10, 10, 10)
-        table.setColumnCount(len(columns_names))
+        table.setColumnCount(len(field_names))
         table.setRowCount(3)
-        table.setHorizontalHeaderLabels(columns_names)
+        table.setHorizontalHeaderLabels(field_names)
         table.resizeColumnsToContents()
         table.resizeRowsToContents()
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -104,7 +104,7 @@ class MTableWidget(QWidget):
 
         self.table = table
         self.title = title
-        self.columns_names = columns_names
+        self.columns_names = field_names
         self.fill_button = fill_button
         self.setLayout(wrapper)
 
