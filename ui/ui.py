@@ -11,6 +11,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import *
 
 from ui.widgets import MTableWidget, MFormWidget, TransactionUtilsWidget
+from control.control import Controller
 
 font = QFont('Verdana', 13)
 font2 = QFont('Comic Sans MS', 12)
@@ -21,6 +22,7 @@ class App(QWidget):
     def __init__(self):
         super().__init__()
         self.title = 'Movie Rental Management'
+        self.controller = Controller()
         self.left = 200
         self.top = 200
         self.width = 800
@@ -47,17 +49,17 @@ class App(QWidget):
 
         edits_layout = QHBoxLayout()
         edits_layout.setSpacing(24)
-        client_form = MFormWidget(title='Client', row_names=['id', 'name', 'age', 'email'])
-        rental_form = MFormWidget(title='Rental', row_names=['id', 'client_id', 'movie_id'])
-        movie_form = MFormWidget(title='Movie', row_names=['id', 'title', 'genre', 'rating'])
+        client_form = MFormWidget(title='client', row_names=['id', 'name', 'age', 'email'])
+        rental_form = MFormWidget(title='rental', row_names=['id', 'client_id', 'movie_id'])
+        movie_form = MFormWidget(title='movie', row_names=['id', 'title', 'genre', 'rating'])
         for widget in [client_form, rental_form, movie_form]:
             edits_layout.addWidget(widget)
 
         tables_layout = QHBoxLayout()
         tables_layout.setSpacing(16)
-        client_table = MTableWidget(['id', 'name', 'age', 'email'], title='Client')
-        rental_table = MTableWidget(['id', 'client_id', 'movie_id'], title='Rental')
-        movie_table = MTableWidget(['id', 'title', 'genre', 'rating'], title='Movie')
+        client_table = MTableWidget(['id', 'name', 'age', 'email'], title='client')
+        rental_table = MTableWidget(['id', 'client_id', 'movie_id'], title='rental')
+        movie_table = MTableWidget(['id', 'title', 'genre', 'rating'], title='movie')
         for widget in [client_table, rental_table, movie_table]:
             tables_layout.addWidget(widget)
 
@@ -80,7 +82,6 @@ class App(QWidget):
         self.show()
 
     def connect_ui(self):
-        self.client_table: MTableWidget
         self.client_table.table.itemSelectionChanged.connect(
             lambda: self.client_form.fill_edits(self.client_table.get_selected_row_data()))
 
@@ -89,6 +90,38 @@ class App(QWidget):
 
         self.rental_table.table.itemSelectionChanged.connect(
             lambda: self.rental_form.fill_edits(self.rental_table.get_selected_row_data()))
+
+        self.client_table.connect_fill_button(
+            lambda x: self.controller.create_select_operation('MovieRental',
+                                                              table_name=self.client_table.title,
+                                                              params={}))
+        self.movie_table.connect_fill_button(
+            lambda x:
+            self.controller.create_select_operation('MovieRental',
+                                                    table_name=self.movie_table.title,
+                                                    params={}))
+        self.rental_table.connect_fill_button(
+            lambda x:
+            self.controller.create_select_operation('MovieRental',
+                                                    table_name=self.rental_table.title,
+                                                    params={}))
+
+        self.client_form: MFormWidget
+        self.client_form.button_bar.connect_buttons(
+            {'Add': lambda: self.controller.create_insert_operation(
+                db_name=None,
+                table_name=self.client_form.title,
+                params=self.client_form.get_values()),
+             'Update': lambda: self.controller.create_update_operation(
+                 db_name=None,
+                 table_name=self.client_form.title,
+                 params=self.client_form.get_values()
+             ),
+             'Delete': lambda: self.controller.create_delete_operation(
+                 db_name=None,
+                 table_name=self.client_form.title,
+                 key=self.client_form.get_values()['id']
+             )})
 
 
 if __name__ == '__main__':

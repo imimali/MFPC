@@ -49,12 +49,17 @@ class MFormWidget(QWidget):
             value_edit.setFixedWidth(120)
             edit_layout.addRow(row, value_edit)
             self.line_edits[row] = value_edit
-        edit_layout.addRow(AUDButtonBar())
+        self.button_bar = AUDButtonBar()
+        self.title = title
+        edit_layout.addRow(self.button_bar)
         self.setLayout(edit_layout)
 
     def fill_edits(self, data):
         for name_edit in self.line_edits:
             self.line_edits[name_edit].setText(data[name_edit])
+
+    def get_values(self):
+        return {name_edit: self.line_edits[name_edit].text() for name_edit in self.line_edits}
 
 
 class AUDButtonBar(QWidget):
@@ -98,6 +103,7 @@ class MTableWidget(QWidget):
         wrapper.addWidget(fill_button)
 
         self.table = table
+        self.title = title
         self.columns_names = columns_names
         self.fill_button = fill_button
         self.setLayout(wrapper)

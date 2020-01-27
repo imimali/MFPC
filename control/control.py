@@ -19,7 +19,7 @@ class Controller:
         self.transactions = []
         self.primary_db = 'MovieRental'
 
-    def create_insert_operation(self, db_name, table_name, **params):
+    def create_insert_operation(self, db_name, table_name, params):
         logging.info(f'Creating insert operation, {db_name}, {table_name}, {params}')
         self.operations.append(InsertOperation(DbConnectionHelper(db_name), table_name, params,
                                                is_explicit=False))
