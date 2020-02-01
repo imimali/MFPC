@@ -67,7 +67,6 @@ class Transaction:
                     op = InsertOperation(DbConnectionHelper(db_name),
                                          table_name,
                                          params=params,
-                                         key=row[0],
                                          is_explicit=False)
                     op.execute()
                     # print(op._build_sql())
@@ -78,6 +77,7 @@ class Transaction:
             op_key = operation.get_resource_id()
             lock_type = 'write' if not operation.is_select else 'read'
             # TODO might have to synchronize atomically the get and the put in the map
+            # TODO lock compatibility
             if self.LOCKS.contains(locked_object=op_key):
                 trans_has_lock = self.LOCKS.get(record_id=op_key,
                                                 lock_type='write')[0].transaction
@@ -95,7 +95,8 @@ class Transaction:
             self.LOCKS.append(LockTableEntry(id=0,
                                              type=lock_type,
                                              record_id=op_key,
-                                             transaction=self.id))
+                                             transaction=self.id,
+                                             table=operation.table_name))
 
         for operation in self.operations:
             operation.execute()
