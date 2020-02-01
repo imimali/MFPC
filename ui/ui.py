@@ -98,6 +98,10 @@ class App(QWidget):
                                              table_name=form.title,
                                              key=form.get_values()['id']
                                          )})
+        form.button_bar.connect_buttons(
+            {key: lambda: self.transaction_handle.fill_transactions(self.controller.operations_history)
+             for key in ['Add', 'Update', 'Delete']}
+        )
 
     def connect_ui(self):
         self.client_table.table.itemSelectionChanged.connect(
@@ -124,9 +128,10 @@ class App(QWidget):
                                                     table_name=self.rental_table.title,
                                                     params={}))
 
-        self.client_form: MFormWidget
         for form in [self.client_form, self.rental_form, self.movie_form]:
             self.connect_form_buttons(form)
+
+        self.transaction_handle.enough_button.clicked.connect(self.controller.create_transaction)
 
 
 if __name__ == '__main__':

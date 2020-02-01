@@ -35,6 +35,10 @@ class TransactionUtilsWidget(QWidget):
     def connect(self):
         pass
 
+    def fill_transactions(self, raw_data):
+        self.transaction_list.clear()
+        self.transaction_list.addItems(raw_data)
+
 
 class MFormWidget(QWidget):
     def __init__(self, title, field_names):

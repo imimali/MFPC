@@ -37,6 +37,11 @@ class DbOperation:
         return f"""{self.connection_params.db_name}${self.table_name}{'$' + str(
             self.key) if self.key is not None else ''}"""
 
+    def to_fancy(self):
+        key = self.get_resource_id()
+        prefix = 'W(' if not self.is_select else 'R('
+        return prefix + key + ')'
+
     def execute(self):
         connection = psycopg2.connect(self.connection_params.to_psycopg2())
         cursor = connection.cursor()
