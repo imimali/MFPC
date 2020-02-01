@@ -50,7 +50,8 @@ class SynchronizedTable:
 
     def get(self, **kwargs):
         with self.lock:
-            return list(filter(lambda x: self._check(x, kwargs), self.elems))
+            result = list(filter(lambda x: self._check(x, kwargs), self.elems))
+            return result if result else None
 
     def update(self, old_elem, new_elem):
         with self.lock:

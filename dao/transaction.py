@@ -76,11 +76,9 @@ class Transaction:
         for operation in self.operations:
             op_key = operation.get_resource_id()
             lock_type = 'write' if not operation.is_select else 'read'
-            # TODO might have to synchronize atomically the get and the put in the map
-            # TODO lock compatibility
-            if self.LOCKS.contains(locked_object=op_key):
-                trans_has_lock = self.LOCKS.get(record_id=op_key,
-                                                lock_type='write')[0].transaction
+            locked_elem = self.LOCKS.get(locked_object=op_key)
+            if locked_elem:
+                trans_has_lock = locked_elem[0].transaction
                 self.logger.warning(f'Waiting for transaction {trans_has_lock}')
                 self.WAIT_FOR_GRAPH.append(
                     WaitForGraphEntry(lock_type=lock_type,
@@ -88,7 +86,7 @@ class Transaction:
                                       locked_object=operation.key,
                                       trans_waits_lock=self.id,
                                       trans_has_lock=trans_has_lock))
-            # TODO this is okay
+
             while self.LOCKS.contains(locked_object=op_key):
                 self.LOCKS.condition.wait()
 
