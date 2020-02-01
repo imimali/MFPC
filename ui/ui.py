@@ -83,6 +83,22 @@ class App(QWidget):
         self.connect_ui()
         self.show()
 
+    def connect_form_buttons(self, form: MFormWidget):
+        form.button_bar.connect_buttons({'Add': lambda: self.controller.create_insert_operation(
+            db_name=None,
+            table_name=form.title,
+            params=form.get_values()),
+                                         'Update': lambda: self.controller.create_update_operation(
+                                             db_name=None,
+                                             table_name=form.title,
+                                             params=form.get_values()
+                                         ),
+                                         'Delete': lambda: self.controller.create_delete_operation(
+                                             db_name=None,
+                                             table_name=form.title,
+                                             key=form.get_values()['id']
+                                         )})
+
     def connect_ui(self):
         self.client_table.table.itemSelectionChanged.connect(
             lambda: self.client_form.fill_edits(self.client_table.get_selected_row_data()))
@@ -109,21 +125,8 @@ class App(QWidget):
                                                     params={}))
 
         self.client_form: MFormWidget
-        self.client_form.button_bar.connect_buttons(
-            {'Add': lambda: self.controller.create_insert_operation(
-                db_name=None,
-                table_name=self.client_form.title,
-                params=self.client_form.get_values()),
-             'Update': lambda: self.controller.create_update_operation(
-                 db_name=None,
-                 table_name=self.client_form.title,
-                 params=self.client_form.get_values()
-             ),
-             'Delete': lambda: self.controller.create_delete_operation(
-                 db_name=None,
-                 table_name=self.client_form.title,
-                 key=self.client_form.get_values()['id']
-             )})
+        for form in [self.client_form, self.rental_form, self.movie_form]:
+            self.connect_form_buttons(form)
 
 
 if __name__ == '__main__':
