@@ -38,7 +38,7 @@ class Controller:
 
     def create_transaction(self):
         logging.info(f'Creating Transaction')
-        self.transactions.append(lambda: Thread(target=Transaction(operations=self.operations).execute()))
+        self.transactions.append(Thread(target=lambda: Transaction(operations=self.operations).execute()))
         self.operations = []
 
     def start_transactions(self):
