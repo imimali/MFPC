@@ -96,6 +96,12 @@ class Transaction:
                                              transaction=self.id,
                                              table=operation.table_name))
 
+            # if the lock was acquired, we no longer wait for anyone
+            self.WAIT_FOR_GRAPH.delete(lock_type=lock_type,
+                                       locked_table=operation.table_name,
+                                       locked_object=operation.key,
+                                       trans_waits_lock=self.id)
+
         for operation in self.operations:
             operation.execute()
         # TODO unlock in reverse order
