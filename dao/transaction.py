@@ -70,7 +70,12 @@ class Transaction:
                                          params=params,
                                          is_explicit=False)
                     op.execute()
-                    # print(op._build_sql())
+
+    def abort(self):
+        self.LOCKS.delete(transaction=self.id)
+        self.WAIT_FOR_GRAPH.delete(trans_waits_lock=self.id, trans_has_lock=self.id)
+        self.TRANSACTIONS.update(self.transaction_table_entry,
+                                 self.transaction_table_entry._replace(status=TransactionStatus.ABORTED))
 
     def execute(self):
         # block all resources
@@ -110,8 +115,7 @@ class Transaction:
         self.LOCKS.delete(transaction=self.id)
 
         # commit
-        commit_entry = self.transaction_table_entry
-        commit_entry.status = TransactionStatus.COMMITTED
+        commit_entry = self.transaction_table_entry._replace(status=TransactionStatus.COMMITTED)
         self.TRANSACTIONS.update(old_elem=self.transaction_table_entry,
                                  new_elem=commit_entry)
         logging.info(f'Transaction {self.id} committed')
