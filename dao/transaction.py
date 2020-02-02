@@ -8,7 +8,8 @@ import logging
 import time
 
 from dao.db import DeleteOperation, DbConnectionHelper, SelectOperation, InsertOperation
-from tables.tables import SynchronizedTable, TransactionTableEntry, WaitForGraphEntry, LockTableEntry, TransactionStatus
+from tables.entry_types import TransactionTableEntry, WaitForGraphEntry, LockTableEntry, TransactionStatus
+from tables.synced import SynchronizedTable
 from threading import Condition
 
 logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-9s) %(message)s')
@@ -77,6 +78,7 @@ class Transaction:
             op_key = operation.get_resource_id()
             lock_type = 'write' if not operation.is_select else 'read'
             locked_elem = self.LOCKS.get(locked_object=op_key)
+            # TODO implement lock compatibility check
             if locked_elem:
                 trans_has_lock = locked_elem[0].transaction
                 self.logger.warning(f'Waiting for transaction {trans_has_lock}')
