@@ -18,8 +18,6 @@ class TransactionUtilsWidget(QWidget):
 
         manage_buttons_layout = QHBoxLayout()
         enough_button = QPushButton('Enough')
-        start_new_transaction_button = QPushButton('New Transaction')
-        manage_buttons_layout.addWidget(start_new_transaction_button)
         manage_buttons_layout.addWidget(enough_button)
         run_transaction_button = QPushButton('Run Transaction')
         run_transaction_layout.addLayout(manage_buttons_layout)
@@ -27,7 +25,6 @@ class TransactionUtilsWidget(QWidget):
         run_transaction_button.setFont(QFont('Verdana', 13))
 
         self.transaction_list = transaction_list
-        self.start_new_transaction_button = start_new_transaction_button
         self.enough_button = enough_button
         self.run_button = run_transaction_button
         self.setLayout(run_transaction_layout)
