@@ -30,9 +30,7 @@ def detect_cycle(graph):
     queue = [tr_id for tr_id in graph if in_degree[tr_id] == 0]
     visited = 0
     topological_order = []
-    # print(in_degree, queue)
     while queue:
-        # print('detect_cycle ->', queue, graph, in_degree)
         front = queue.pop(0)
         topological_order.append(front)
         for node in graph[front]:
@@ -41,25 +39,17 @@ def detect_cycle(graph):
                 queue.append(node)
         visited += 1
     if visited != len(graph):
-        # print(list(set(graph.keys()).difference(set(topological_order))))
         return list(set(graph.keys()).difference(set(topological_order)))
-    # print('no cycles')
     return None
 
 
 def without_cycles(graph):
     cycle_nodes = detect_cycle(graph)
     to_delete = []
-    print('without ->', graph, cycle_nodes)
     while cycle_nodes is not None:
         node_to_delete = random.choice(cycle_nodes)
         to_delete.append(node_to_delete)
         del graph[node_to_delete]
         graph = {key: [x for x in graph[key] if x != node_to_delete] for key in graph}
         cycle_nodes = detect_cycle(graph)
-        print('without ->', graph, cycle_nodes)
-
-# detect_cycle({1: [2, 3], 2: [4], 3: [4], 4: [1], 5: [1, 3]})
-# detect_cycle({1: [4, 5], 2: [1], 3: [1, 5], 4: [2, 3], 5: []})
-# without_cycles({1: [2,3], 2: [4], 3: [4], 4: [1], 5: [1,3]})
-# detect_cycle({1: [5], 2: [1], 3: [1, 5], 5: []})
+    return to_delete

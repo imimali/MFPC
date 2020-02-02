@@ -8,9 +8,10 @@ import logging
 import time
 
 from dao.db import DeleteOperation, DbConnectionHelper, SelectOperation, InsertOperation
+from dao.graph import without_cycles, table_to_graph
 from tables.entry_types import TransactionTableEntry, WaitForGraphEntry, LockTableEntry, TransactionStatus
 from tables.synced import SynchronizedTable
-from threading import Condition
+from threading import Condition, Thread
 
 logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-9s) %(message)s')
 
@@ -34,7 +35,8 @@ class Transaction:
         self._save_backup_data()
         self.transaction_table_entry = TransactionTableEntry(id=self.id,
                                                              timestamp=time.time(),
-                                                             status=TransactionStatus.ACTIVE.value)
+                                                             status=TransactionStatus.ACTIVE.value,
+                                                             ref=self)
         self.TRANSACTIONS.append(self.transaction_table_entry)
 
     def _save_backup_data(self):
@@ -119,6 +121,22 @@ class Transaction:
         self.TRANSACTIONS.update(old_elem=self.transaction_table_entry,
                                  new_elem=commit_entry)
         logging.info(f'Transaction {self.id} committed')
+
+    @staticmethod
+    def launch_deadlock_checker_daemon():
+        def daemon_target():
+            while True:
+                time.sleep(3)
+                logging.info('Checking for cycles')
+                to_abort = without_cycles(table_to_graph(Transaction.WAIT_FOR_GRAPH))
+                transactions = Transaction.TRANSACTIONS.get()
+                for transaction in transactions:
+                    if transaction.id in to_abort:
+                        transaction.abort()
+                        transaction.rollback()
+
+        daemon = Thread(name='cycle_checker', target=daemon_target)
+        daemon.start()
 
 
 '''

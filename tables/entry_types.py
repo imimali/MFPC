@@ -23,7 +23,8 @@ LockTableEntry = namedtuple('LockTableEntry',
 TransactionTableEntry = namedtuple('TransactionTableEntry',
                                    'id '
                                    'timestamp '
-                                   'status')
+                                   'status '
+                                   'ref')
 
 WaitForGraphEntry = namedtuple('WaitForGraphEntry',
                                'lock_type '
