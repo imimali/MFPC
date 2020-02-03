@@ -113,25 +113,3 @@ class DeleteOperation(DbOperation):
         if self.key:
             sql += f" WHERE id = %s"
         return sql, (self.key,)
-
-
-'''
-connection = DbConnectionHelper('MovieRental')
-print('     initial', SelectOperation(connection, 'client').execute())
-
-update_operation = UpdateOperation(connection, 'client', params={'id': 12, 'email': 'ahoy@mail'})
-update_operation.execute()
-print('after update', SelectOperation(connection, 'client').execute())
-
-insert_operation = InsertOperation(connection, 'client',
-                                   params={'id': 12, 'name': 'once again', 'email': 'hot@mail', 'age': 22})
-print(insert_operation._build_sql())
-insert_operation.execute()
-print('after insert', SelectOperation(connection, 'client').execute())
-
-delete_operation = DeleteOperation(connection, 'client', params={'id': 12})
-delete_operation.execute()
-print('after delete', SelectOperation(connection, 'client').execute())
-connection = DbConnectionHelper('MovieRental')
-print(SelectOperation(connection, 'client').get_resource_id())
-'''

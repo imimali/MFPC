@@ -90,9 +90,12 @@ class Transaction:
             op_key = operation.get_resource_id()
             lock_type = 'write' if not operation.is_select else 'read'
             locked_elem = self.LOCKS.get(record_id=op_key)
-            # TODO implement lock compatibility check
             is_mine = False if not locked_elem else locked_elem[0].transaction == self.id
-            if locked_elem:
+            is_compatible = (False if lock_type == 'write' else
+                             True if
+                             lock_type == 'read' and locked_elem[0].type == 'read'
+                             else False)
+            if locked_elem and is_mine and is_compatible:
                 trans_has_lock = locked_elem[0].transaction
                 self.logger.warning(f'Waiting for transaction {trans_has_lock}')
                 self.WAIT_FOR_GRAPH.append(
@@ -148,22 +151,3 @@ class Transaction:
 
         logging.info('Starting check for cycles')
         return Thread(name='cycle_checker', target=daemon_target)
-
-
-'''
-connection = DbConnectionHelper('MovieRental')
-connection_aop = DbConnectionHelper('aop')
-
-update_op = UpdateOperation(connection, 'client', key=12, params={'email': 'ahoy@mail'})
-insert_op = InsertOperation(connection, 'client', key=12,
-            params={'name': 'once again', 'email': 'hot@mail', 'age': 22},
-            is_explicit=False)
-delete_op = DeleteOperation(connection_aop, 'my_entity')
-select_op = SelectOperation(connection_aop, 'candidates')
-
-transaction = Transaction([update_op, insert_op, delete_op, select_op])
-# transaction.rollback()
-# print(transaction.rollback())
-# print(insert_op._build_sql())
-# print(delete_op.execute())
-'''

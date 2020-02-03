@@ -32,14 +32,3 @@ WaitForGraphEntry = namedtuple('WaitForGraphEntry',
                                'locked_object '
                                'trans_has_lock '
                                'trans_waits_lock')
-
-'''
-t = SynchronizedTable()
-
-t.append(TransactionTableEntry(id=0, status='active', timestamp=0))
-t.append(TransactionTableEntry(id=1, status='active', timestamp=11))
-t.append(TransactionTableEntry(id=2, status='active', timestamp=1))
-t.append(TransactionTableEntry(id=3, status='committed', timestamp=0))
-print(t.contains(id=3, status='active'))
-print(t.delete(status='active'))
-'''

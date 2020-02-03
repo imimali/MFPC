@@ -11,9 +11,6 @@ from PyQt5.QtWidgets import QApplication
 
 from ui.ui import App
 
-# TODO use other tables
-# TODO lock compativ
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     connection = DbConnectionHelper('MFPC0')
@@ -21,7 +18,6 @@ if __name__ == '__main__':
     clients = SelectOperation(connection, 'client').execute()
     products = SelectOperation(connection, 'product').execute()
     payments = SelectOperation(connection1, 'payments').execute()
-    print(clients,payments)
     Transaction.deadlock_checker_daemon().start()
     ex = App()
     ex.client_table.fill(clients)

@@ -38,3 +38,4 @@ deletion, addition and lookup of certain fields of these entities in a synchroni
 ## Future improvements  
 - generalise key inference
 - support multiple arguments for delete operation
+- gracefully shut down cycle checker thread

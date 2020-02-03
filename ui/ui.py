@@ -51,7 +51,7 @@ class App(QWidget):
         product_table_metadata = {'db_name': 'MFPC0', 'table_name': 'product',
                                   'field_names': ['id', 'name', 'price']}
         payment_table_metadata = {'db_name': 'MFPC1', 'table_name': 'payments',
-                                  'field_names': ['id', 'client', 'product', 'commission']}
+                                  'field_names': ['id', 'client', 'product', 'commisssion']}
         edits_layout = QHBoxLayout()
         edits_layout.setSpacing(24)
         client_form = MFormWidget(**client_table_metadata)
