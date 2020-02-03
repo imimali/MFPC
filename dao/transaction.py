@@ -43,6 +43,7 @@ class Transaction:
         # save in a set every table name along with the db it belongs to
         working_tables = {(operation.connection_params.db_name, operation.table_name) for operation in self.operations
                           if not operation.is_select}
+        print(working_tables, self.operations)
 
         # prepare afferent select operations to save the data
         backup_operations = [SelectOperation(DbConnectionHelper(db_name=pair[0]), table_name=pair[1])
@@ -97,7 +98,8 @@ class Transaction:
                                       trans_has_lock=trans_has_lock))
 
             while self.LOCKS.contains(locked_object=op_key):
-                self.LOCKS.condition.wait()
+                with self.LOCKS.condition:
+                    self.LOCKS.condition.wait()
 
             self.LOCKS.append(LockTableEntry(id=0,
                                              type=lock_type,

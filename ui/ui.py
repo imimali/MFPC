@@ -28,12 +28,12 @@ class App(QWidget):
         self.width = 800
         self.height = 800
         self.client_table = None
-        self.rental_table = None
-        self.movie_table = None
+        self.product_table = None
+        self.payments_table = None
 
         self.client_form = None
-        self.rental_form = None
-        self.movie_form = None
+        self.product_form = None
+        self.payment_form = None
 
         self.transaction_handle = None
 
@@ -46,22 +46,25 @@ class App(QWidget):
         main_layout = QVBoxLayout()
 
         # transaction
-        client_table_metadata = {'db_name': '', 'table_name': 'client', 'field_names': ['id', 'name', 'age', 'email']}
-        rental_table_metadata = {'db_name': '', 'table_name': 'rental', 'field_names': ['id', 'client_id', 'movie_id']}
-        movie_table_metadata = {'db_name': '', 'table_name': 'movie', 'field_names': ['id', 'title', 'genre', 'rating']}
+        client_table_metadata = {'db_name': 'MFPC0', 'table_name': 'client',
+                                 'field_names': ['id', 'name', 'age', 'email']}
+        product_table_metadata = {'db_name': 'MFPC0', 'table_name': 'product',
+                                  'field_names': ['id', 'name', 'price']}
+        payment_table_metadata = {'db_name': 'MPFC1', 'table_name': 'payments',
+                                  'field_names': ['id', 'client', 'product', 'commission']}
         edits_layout = QHBoxLayout()
         edits_layout.setSpacing(24)
         client_form = MFormWidget(**client_table_metadata)
-        rental_form = MFormWidget(**rental_table_metadata)
-        movie_form = MFormWidget(**movie_table_metadata)
+        rental_form = MFormWidget(**product_table_metadata)
+        movie_form = MFormWidget(**payment_table_metadata)
         for widget in [client_form, rental_form, movie_form]:
             edits_layout.addWidget(widget)
 
         tables_layout = QHBoxLayout()
         tables_layout.setSpacing(16)
         client_table = MTableWidget(**client_table_metadata)
-        rental_table = MTableWidget(**rental_table_metadata)
-        movie_table = MTableWidget(**movie_table_metadata)
+        rental_table = MTableWidget(**product_table_metadata)
+        movie_table = MTableWidget(**payment_table_metadata)
         for widget in [client_table, rental_table, movie_table]:
             tables_layout.addWidget(widget)
 
@@ -72,12 +75,12 @@ class App(QWidget):
         self.setLayout(main_layout)
 
         self.client_table = client_table
-        self.rental_table = rental_table
-        self.movie_table = movie_table
+        self.product_table = rental_table
+        self.payments_table = movie_table
 
         self.client_form = client_form
-        self.rental_form = rental_form
-        self.movie_form = movie_form
+        self.product_form = rental_form
+        self.payment_form = movie_form
 
         self.transaction_handle = transaction_utils
         self.connect_ui()
@@ -107,28 +110,28 @@ class App(QWidget):
         self.client_table.table.itemSelectionChanged.connect(
             lambda: self.client_form.fill_edits(self.client_table.get_selected_row_data()))
 
-        self.movie_table.table.itemSelectionChanged.connect(
-            lambda: self.movie_form.fill_edits(self.movie_table.get_selected_row_data()))
+        self.payments_table.table.itemSelectionChanged.connect(
+            lambda: self.payment_form.fill_edits(self.payments_table.get_selected_row_data()))
 
-        self.rental_table.table.itemSelectionChanged.connect(
-            lambda: self.rental_form.fill_edits(self.rental_table.get_selected_row_data()))
+        self.product_table.table.itemSelectionChanged.connect(
+            lambda: self.product_form.fill_edits(self.product_table.get_selected_row_data()))
 
         self.client_table.connect_fill_button(
-            lambda x: self.controller.create_select_operation('MovieRental',
-                                                              table_name=self.client_table.title,
+            lambda x: self.controller.create_select_operation(db_name=self.client_table.db_name,
+                                                              table_name=self.client_table.table_name,
                                                               params={}))
-        self.movie_table.connect_fill_button(
+        self.payments_table.connect_fill_button(
             lambda x:
-            self.controller.create_select_operation('MovieRental',
-                                                    table_name=self.movie_table.title,
+            self.controller.create_select_operation(db_name=self.payments_table.db_name,
+                                                    table_name=self.payments_table.table_name,
                                                     params={}))
-        self.rental_table.connect_fill_button(
+        self.product_table.connect_fill_button(
             lambda x:
-            self.controller.create_select_operation('MovieRental',
-                                                    table_name=self.rental_table.title,
+            self.controller.create_select_operation(db_name=self.product_table.db_name,
+                                                    table_name=self.product_table.table_name,
                                                     params={}))
 
-        for form in [self.client_form, self.rental_form, self.movie_form]:
+        for form in [self.client_form, self.product_form, self.payment_form]:
             self.connect_form_buttons(form)
 
         self.transaction_handle.enough_button.clicked.connect(self.controller.create_transaction)

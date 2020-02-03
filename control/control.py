@@ -32,6 +32,7 @@ class Controller:
         self.operations_history[-1] += self.operations[-1].to_fancy() + '; '
 
     def create_select_operation(self, db_name, table_name, params):
+
         logging.info(f'Creating select operation, {db_name}, {table_name}, {params}')
         self.operations.append(SelectOperation(DbConnectionHelper(db_name), table_name, params))
         self.operations_history[-1] += self.operations[-1].to_fancy() + '; '
@@ -42,9 +43,11 @@ class Controller:
         self.operations_history[-1] += self.operations[-1].to_fancy() + '; '
 
     def create_transaction(self):
-        logging.info(f'Creating Transaction')
+        logging.info(f'Creating Transaction with ops {self.operations}')
         if self.operations:
-            self.transactions.append(Thread(target=lambda: Transaction(operations=self.operations).execute()))
+            operations = self.operations[:]
+            self.transactions.append(
+                Thread(target=lambda ops: Transaction(operations=ops).execute(), args=(operations,)))
             self.operations_history.append('')
             self.operations = []
         else:

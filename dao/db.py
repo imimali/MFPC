@@ -53,6 +53,9 @@ class DbOperation:
         else:
             connection.commit()
 
+    def __repr__(self):
+        return str(self._build_sql())
+
 
 class InsertOperation(DbOperation):
     def __init__(self, connection_params: DbConnectionHelper, table_name, params=None,

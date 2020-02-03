@@ -39,7 +39,8 @@ class SynchronizedTable:
         with self.lock:
             self.elems = list(filter(lambda x: not self._check(x, kwargs), self.elems))
         if self.condition is not None:
-            self.condition.notifyAll()
+            with self.condition:
+                self.condition.notifyAll()
 
     def __str__(self):
         return str([str(x) for x in self.elems])
