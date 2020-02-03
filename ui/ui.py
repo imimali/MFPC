@@ -46,9 +46,9 @@ class App(QWidget):
         main_layout = QVBoxLayout()
 
         # transaction
-        client_table_metadata = {'title': 'client', 'field_names': ['id', 'name', 'age', 'email']}
-        rental_table_metadata = {'title': 'rental', 'field_names': ['id', 'client_id', 'movie_id']}
-        movie_table_metadata = {'title': 'movie', 'field_names': ['id', 'title', 'genre', 'rating']}
+        client_table_metadata = {'db_name': '', 'table_name': 'client', 'field_names': ['id', 'name', 'age', 'email']}
+        rental_table_metadata = {'db_name': '', 'table_name': 'rental', 'field_names': ['id', 'client_id', 'movie_id']}
+        movie_table_metadata = {'db_name': '', 'table_name': 'movie', 'field_names': ['id', 'title', 'genre', 'rating']}
         edits_layout = QHBoxLayout()
         edits_layout.setSpacing(24)
         client_form = MFormWidget(**client_table_metadata)
@@ -86,16 +86,16 @@ class App(QWidget):
     def connect_form_buttons(self, form: MFormWidget):
         form.button_bar.connect_buttons({'Add': lambda: self.controller.create_insert_operation(
             db_name=None,
-            table_name=form.title,
+            table_name=form.table_name,
             params=form.get_values()),
                                          'Update': lambda: self.controller.create_update_operation(
                                              db_name=None,
-                                             table_name=form.title,
+                                             table_name=form.table_name,
                                              params=form.get_values()
                                          ),
                                          'Delete': lambda: self.controller.create_delete_operation(
                                              db_name=None,
-                                             table_name=form.title,
+                                             table_name=form.table_name,
                                              key=form.get_values()['id']
                                          )})
         form.button_bar.connect_buttons(
@@ -132,9 +132,4 @@ class App(QWidget):
             self.connect_form_buttons(form)
 
         self.transaction_handle.enough_button.clicked.connect(self.controller.create_transaction)
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = App()
-    sys.exit(app.exec_())
+        self.transaction_handle.run_button.clicked.connect(self.controller.start_transactions)

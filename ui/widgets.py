@@ -38,11 +38,11 @@ class TransactionUtilsWidget(QWidget):
 
 
 class MFormWidget(QWidget):
-    def __init__(self, title, field_names):
+    def __init__(self, table_name, db_name, field_names):
         super().__init__()
         edit_layout = QFormLayout()
         edit_layout.setSpacing(4)
-        edit_layout.addWidget(QLabel(title))
+        edit_layout.addWidget(QLabel(table_name))
         self.line_edits = {}
         for row in field_names:
             value_edit = QLineEdit()
@@ -51,7 +51,8 @@ class MFormWidget(QWidget):
             edit_layout.addRow(row, value_edit)
             self.line_edits[row] = value_edit
         self.button_bar = AUDButtonBar()
-        self.title = title
+        self.table_name = table_name
+        self.db_name = db_name
         edit_layout.addRow(self.button_bar)
         self.setLayout(edit_layout)
 
@@ -83,7 +84,7 @@ class AUDButtonBar(QWidget):
 
 
 class MTableWidget(QWidget):
-    def __init__(self, field_names, title):
+    def __init__(self, field_names, table_name, db_name):
         super().__init__()
         table = QTableWidget()
         table.setContentsMargins(10, 10, 10, 10)
@@ -97,14 +98,15 @@ class MTableWidget(QWidget):
 
         wrapper = QVBoxLayout()
 
-        wrapper.addWidget(QLabel(title))
+        wrapper.addWidget(QLabel(table_name))
         wrapper.addWidget(table)
         fill_button = QPushButton('Fill')
         fill_button.setFixedWidth(100)
         wrapper.addWidget(fill_button)
 
         self.table = table
-        self.title = title
+        self.table_name = table_name
+        self.db_name = db_name
         self.columns_names = field_names
         self.fill_button = fill_button
         self.setLayout(wrapper)
