@@ -113,7 +113,6 @@ class Transaction:
 
         for operation in self.operations:
             operation.execute()
-        # TODO unlock in reverse order
         self.LOCKS.delete(transaction=self.id)
 
         # commit
@@ -130,11 +129,14 @@ class Transaction:
                 logging.info('Checking for cycles')
                 to_abort = without_cycles(table_to_graph(Transaction.WAIT_FOR_GRAPH))
                 transactions = Transaction.TRANSACTIONS.get()
+                if transactions is None:
+                    continue
                 for transaction in transactions:
                     if transaction.id in to_abort:
                         transaction.abort()
                         transaction.rollback()
 
+        logging.info('Starting check for cycles')
         daemon = Thread(name='cycle_checker', target=daemon_target)
         daemon.start()
 

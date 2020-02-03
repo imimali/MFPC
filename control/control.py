@@ -51,6 +51,7 @@ class Controller:
             logging.warning('No operations added. Transaction not created')
 
     def start_transactions(self):
+        self.operations_history.clear()
         for transaction in self.transactions:
             transaction.start()
         for transaction in self.transactions:

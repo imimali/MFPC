@@ -10,6 +10,8 @@ import random
 
 def table_to_graph(wait_for_table: SynchronizedTable):
     elems = wait_for_table.get()
+    if elems is None:
+        return set()
     nodes = {entry.trans_has_lock for entry in elems}.union({entry.trans_waits_lock for entry in elems})
     graph = {entry: [] for entry in nodes}
     for entry in elems:
