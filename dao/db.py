@@ -46,7 +46,7 @@ class DbOperation:
         connection = psycopg2.connect(self.connection_params.to_psycopg2())
         cursor = connection.cursor()
         cursor_params = self._build_sql()
-        logger.info(f'Executing {cursor_params}')
+        # logger.info(f'Executing {cursor_params}')
         cursor.execute(*cursor_params)
         if self.is_select:
             return cursor.fetchall()
@@ -77,7 +77,8 @@ class UpdateOperation(DbOperation):
 
     def _build_sql(self):
         assert len(self.params) >= 1
-        del self.params['id']
+        if 'id' in self.params:
+            del self.params['id']
         params = tuple(self.params.keys())
         column_names = ', '.join(map(lambda x: x + ' = %s', params))
         where_params = 'id = %s'

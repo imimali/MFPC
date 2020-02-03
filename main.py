@@ -4,16 +4,27 @@
     @author: Gergely
 '''
 import sys
+
+from dao.db import DbConnectionHelper, SelectOperation
 from dao.transaction import Transaction
 from PyQt5.QtWidgets import QApplication
 
 from ui.ui import App
 
 # TODO use other tables
-# TODO actually fill tables
+# TODO lock compativ
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    Transaction.launch_deadlock_checker_daemon()
+    connection = DbConnectionHelper('MFPC0')
+    connection1 = DbConnectionHelper('MFPC1')
+    clients = SelectOperation(connection, 'client').execute()
+    products = SelectOperation(connection, 'product').execute()
+    payments = SelectOperation(connection1, 'payments').execute()
+    print(clients,payments)
+    Transaction.deadlock_checker_daemon().start()
     ex = App()
+    ex.client_table.fill(clients)
+    ex.product_table.fill(products)
+    ex.payments_table.fill(payments)
     sys.exit(app.exec_())

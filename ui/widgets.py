@@ -18,7 +18,9 @@ class TransactionUtilsWidget(QWidget):
 
         manage_buttons_layout = QHBoxLayout()
         enough_button = QPushButton('Enough')
+        clear_button = QPushButton('Clear')
         manage_buttons_layout.addWidget(enough_button)
+        manage_buttons_layout.addWidget(clear_button)
         run_transaction_button = QPushButton('Run Transaction')
         run_transaction_layout.addLayout(manage_buttons_layout)
         run_transaction_layout.addWidget(run_transaction_button)
@@ -28,9 +30,10 @@ class TransactionUtilsWidget(QWidget):
         self.enough_button = enough_button
         self.run_button = run_transaction_button
         self.setLayout(run_transaction_layout)
+        self.clear_button = clear_button
 
-    def connect(self):
-        pass
+    def clear(self):
+        self.transaction_list.clear()
 
     def fill_transactions(self, raw_data):
         self.transaction_list.clear()

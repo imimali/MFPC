@@ -50,7 +50,7 @@ class App(QWidget):
                                  'field_names': ['id', 'name', 'age', 'email']}
         product_table_metadata = {'db_name': 'MFPC0', 'table_name': 'product',
                                   'field_names': ['id', 'name', 'price']}
-        payment_table_metadata = {'db_name': 'MPFC1', 'table_name': 'payments',
+        payment_table_metadata = {'db_name': 'MFPC1', 'table_name': 'payments',
                                   'field_names': ['id', 'client', 'product', 'commission']}
         edits_layout = QHBoxLayout()
         edits_layout.setSpacing(24)
@@ -136,3 +136,9 @@ class App(QWidget):
 
         self.transaction_handle.enough_button.clicked.connect(self.controller.create_transaction)
         self.transaction_handle.run_button.clicked.connect(self.controller.start_transactions)
+
+        def clear():
+            self.controller.clear()
+            self.transaction_handle.clear()
+
+        self.transaction_handle.clear_button.clicked.connect(clear)

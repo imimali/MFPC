@@ -44,10 +44,20 @@ class Controller:
 
     def create_transaction(self):
         logging.info(f'Creating Transaction with ops {self.operations}')
+
+        def create(ops):
+            transaction = Transaction(operations=ops)
+            try:
+                transaction.execute()
+            except Exception as e:
+                logging.error(f'Error occurred {e}')
+                transaction.abort()
+                transaction.rollback()
+
         if self.operations:
             operations = self.operations[:]
             self.transactions.append(
-                Thread(target=lambda ops: Transaction(operations=ops).execute(), args=(operations,)))
+                Thread(target=create, args=(operations,)))
             self.operations_history.append('')
             self.operations = []
         else:
@@ -59,3 +69,8 @@ class Controller:
             transaction.start()
         for transaction in self.transactions:
             transaction.join()
+
+    def clear(self):
+        self.transactions.clear()
+        self.operations.clear()
+        self.operations_history = ['']

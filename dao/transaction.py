@@ -38,12 +38,13 @@ class Transaction:
                                                              status=TransactionStatus.ACTIVE.value,
                                                              ref=self)
         self.TRANSACTIONS.append(self.transaction_table_entry)
+        self.is_aborted = False
 
     def _save_backup_data(self):
         # save in a set every table name along with the db it belongs to
         working_tables = {(operation.connection_params.db_name, operation.table_name) for operation in self.operations
                           if not operation.is_select}
-        print(working_tables, self.operations)
+        # print(working_tables, self.operations)
 
         # prepare afferent select operations to save the data
         backup_operations = [SelectOperation(DbConnectionHelper(db_name=pair[0]), table_name=pair[1])
@@ -67,7 +68,7 @@ class Transaction:
             for entry in data:
                 db_name, table_name = entry.split('$')
                 for row in data[entry]:
-                    params = {str(i): row[i] for i in range(1, len(row))}
+                    params = {str(i): row[i] for i in range(0, len(row))}
                     op = InsertOperation(DbConnectionHelper(db_name),
                                          table_name,
                                          params=params,
@@ -75,18 +76,22 @@ class Transaction:
                     op.execute()
 
     def abort(self):
-        self.LOCKS.delete(transaction=self.id)
-        self.WAIT_FOR_GRAPH.delete(trans_waits_lock=self.id, trans_has_lock=self.id)
+        self.logger.warning('Aborting')
+        self.is_aborted = True
         self.TRANSACTIONS.update(self.transaction_table_entry,
                                  self.transaction_table_entry._replace(status=TransactionStatus.ABORTED))
+        self.LOCKS.delete(transaction=self.id)
+        self.WAIT_FOR_GRAPH.delete(trans_waits_lock=self.id, trans_has_lock=self.id)
 
     def execute(self):
         # block all resources
+        self.logger.info(f'Lock Table is{Transaction.LOCKS}')
         for operation in self.operations:
             op_key = operation.get_resource_id()
             lock_type = 'write' if not operation.is_select else 'read'
-            locked_elem = self.LOCKS.get(locked_object=op_key)
+            locked_elem = self.LOCKS.get(record_id=op_key)
             # TODO implement lock compatibility check
+            is_mine = False if not locked_elem else locked_elem[0].transaction == self.id
             if locked_elem:
                 trans_has_lock = locked_elem[0].transaction
                 self.logger.warning(f'Waiting for transaction {trans_has_lock}')
@@ -97,9 +102,11 @@ class Transaction:
                                       trans_waits_lock=self.id,
                                       trans_has_lock=trans_has_lock))
 
-            while self.LOCKS.contains(locked_object=op_key):
-                with self.LOCKS.condition:
-                    self.LOCKS.condition.wait()
+                while self.LOCKS.contains(record_id=op_key):
+                    with self.LOCKS.condition:
+                        self.LOCKS.condition.wait()
+                        if self.is_aborted:
+                            return
 
             self.LOCKS.append(LockTableEntry(id=0,
                                              type=lock_type,
@@ -114,6 +121,7 @@ class Transaction:
                                        trans_waits_lock=self.id)
 
         for operation in self.operations:
+            self.logger.info(f'Executing {operation}')
             operation.execute()
         self.LOCKS.delete(transaction=self.id)
 
@@ -124,10 +132,10 @@ class Transaction:
         logging.info(f'Transaction {self.id} committed')
 
     @staticmethod
-    def launch_deadlock_checker_daemon():
+    def deadlock_checker_daemon():
         def daemon_target():
             while True:
-                time.sleep(3)
+                time.sleep(13)
                 logging.info('Checking for cycles')
                 to_abort = without_cycles(table_to_graph(Transaction.WAIT_FOR_GRAPH))
                 transactions = Transaction.TRANSACTIONS.get()
@@ -135,12 +143,11 @@ class Transaction:
                     continue
                 for transaction in transactions:
                     if transaction.id in to_abort:
-                        transaction.abort()
-                        transaction.rollback()
+                        transaction.ref.abort()
+                        transaction.ref.rollback()
 
         logging.info('Starting check for cycles')
-        daemon = Thread(name='cycle_checker', target=daemon_target)
-        daemon.start()
+        return Thread(name='cycle_checker', target=daemon_target)
 
 
 '''
