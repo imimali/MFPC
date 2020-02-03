@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import QApplication
 from ui.ui import App
 
 # TODO use other tables
-# TODO specify database name at ui
 # TODO actually fill tables
 
 if __name__ == '__main__':

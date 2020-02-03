@@ -85,16 +85,16 @@ class App(QWidget):
 
     def connect_form_buttons(self, form: MFormWidget):
         form.button_bar.connect_buttons({'Add': lambda: self.controller.create_insert_operation(
-            db_name=None,
+            db_name=form.db_name,
             table_name=form.table_name,
             params=form.get_values()),
                                          'Update': lambda: self.controller.create_update_operation(
-                                             db_name=None,
+                                             db_name=form.db_name,
                                              table_name=form.table_name,
                                              params=form.get_values()
                                          ),
                                          'Delete': lambda: self.controller.create_delete_operation(
-                                             db_name=None,
+                                             db_name=form.db_name,
                                              table_name=form.table_name,
                                              key=form.get_values()['id']
                                          )})
